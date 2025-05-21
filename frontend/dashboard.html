@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Dashboard - Decentralized Energy Sharing</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .dashboard {
+      max-width: 900px;
+      margin: 50px auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      font-family: Arial, sans-serif;
+    }
+    .dashboard h2 {
+      margin-bottom: 10px;
+      color: #0288d1;
+    }
+    .info {
+      margin: 20px 0;
+      font-size: 1.1rem;
+    }
+    .info p span {
+      font-weight: bold;
+    }
+    .actions {
+      margin: 20px 0;
+    }
+    .actions button {
+      padding: 10px 20px;
+      margin-right: 10px;
+      margin-bottom: 10px;
+      background-color: #0288d1;
+      border: none;
+      color: white;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .actions button:hover {
+      background-color: #0277bd;
+    }
+    .logout {
+      background-color: #e53935;
+    }
+    .logout:hover {
+      background-color: #d32f2f;
+    }
+    .offers {
+      margin: 20px 0;
+      padding: 15px;
+      background: #f9f9f9;
+      border-radius: 5px;
+    }
+    .offer {
+      border-bottom: 1px solid #ccc;
+      padding: 10px 0;
+    }
+    .offer:last-child {
+      border-bottom: none;
+    }
+    .offer p {
+      margin: 5px 0;
+    }
+    .dynamic-msg {
+      margin-top: 10px;
+      font-style: italic;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+    <h2>Welcome back, <span id="username">User</span>!</h2>
+    <div class="info">
+      <p>Email: <span id="user-email">Unknown</span></p>
+      <p>Energy Balance: <span id="balance">Loading...</span> Tokens</p>
+      <p>Wallet: <span id="wallet-address">Not set</span></p>
+    </div>
+    
+    <div class="actions">
+      <button onclick="produceEnergy()">Produce Energy</button>
+      <button onclick="transferEnergy()">Transfer Energy</button>
+      <button onclick="viewTransactions()">Transaction History</button>
+      <button onclick="accessWallet()">My Wallet</button>
+      <button onclick="postOffer()">Post an Offer</button>
+      <button onclick="goToMarketplace()">Go to Marketplace</button>
+    </div>
+    
+    <div class="offers">
+      <h3>Current Energy Selling Offers</h3>
+      <div id="offersContainer">Loading offers...</div>
+    </div>
+    
+    <button class="logout" onclick="logout()">Logout</button>
+    
+    <div class="dynamic-msg" id="dynamic-msg"></div>
+  </div>
+
+  <script>
+    // Retrieve user info from localStorage
+    const username = localStorage.getItem("username");
+    const email = localStorage.getItem("email");
+    const userId = localStorage.getItem("user_id");
+
+    // Display user data on the page
+    document.getElementById("username").textContent = username || "User";
+    document.getElementById("user-email").textContent = email || "Unknown";
+
+    function logout() {
+      localStorage.clear();
+      window.location.href = "login.html";
+    }
+
+    function produceEnergy() {
+      window.location.href = "ProduceEnergy.html";
+    }
+
+    function transferEnergy() {
+      window.location.href = "TransferEnergy.html";
+    }
+
+    function viewTransactions() {
+      window.location.href = "TransactionHistory.html";
+    }
+
+    function accessWallet() {
+      window.location.href = "Wallet.html";
+    }
+
+    function postOffer() {
+      window.location.href = "postOffer.html";
+    }
+
+    function goToMarketplace() {
+      window.location.href = "marketplace.html";
+    }
+
+    // Load wallet info and update energy balance dynamically
+    async function loadWalletAndBalance() {
+      if (!userId) {
+        document.getElementById("balance").textContent = "N/A";
+        document.getElementById("wallet-address").textContent = "N/A";
+        return;
+      }
+      try {
+        const walletRes = await fetch(`/api/wallet/${userId}`);
+        const walletData = await walletRes.json();
+        if (walletRes.ok && walletData.wallet) {
+          const walletAddress = walletData.wallet.wallet_address;
+          document.getElementById("wallet-address").textContent = walletAddress || "Not set";
+          if (walletAddress) {
+            const balanceRes = await fetch(`/api/energy/balance/${walletAddress}`);
+            const balanceData = await balanceRes.json();
+            if (balanceRes.ok) {
+              document.getElementById("balance").textContent = balanceData.balance;
+            } else {
+              document.getElementById("balance").textContent = "Error";
+            }
+          } else {
+            document.getElementById("balance").textContent = "Wallet not set";
+          }
+        } else {
+          document.getElementById("wallet-address").textContent = "Not set";
+          document.getElementById("balance").textContent = "N/A";
+        }
+      } catch (error) {
+        console.error("Error loading wallet and balance:", error);
+        document.getElementById("balance").textContent = "Error";
+        document.getElementById("wallet-address").textContent = "Error";
+      }
+    }
+
+    // Load offers dynamically
+    async function loadOffers() {
+      try {
+        const res = await fetch("/api/offers");
+        const data = await res.json();
+        const offersContainer = document.getElementById("offersContainer");
+        if (res.ok) {
+          if (data.offers.length === 0) {
+            offersContainer.textContent = "No offers available at the moment.";
+          } else {
+            offersContainer.innerHTML = "";
+            data.offers.forEach(offer => {
+              const div = document.createElement("div");
+              div.className = "offer";
+              const postedDate = new Date(offer.created_at).toLocaleString();
+              div.innerHTML = `
+                <p><strong>Seller:</strong> ${offer.seller}</p>
+                <p><strong>Energy Amount:</strong> ${offer.energy_amount} Tokens</p>
+                <p><strong>Price:</strong> ${offer.price}</p>
+                <p><strong>Description:</strong> ${offer.description || "-"}</p>
+                <p><small>Posted on: ${postedDate}</small></p>
+              `;
+              offersContainer.appendChild(div);
+            });
+          }
+        } else {
+          offersContainer.textContent = "Error loading offers.";
+        }
+      } catch (error) {
+        console.error("Error fetching offers:", error);
+        document.getElementById("offersContainer").textContent = "Error connecting to server.";
+      }
+    }
+
+    function startAutoRefresh() {
+      loadWalletAndBalance();
+      loadOffers();
+  
+      setInterval(() => {
+        loadWalletAndBalance();
+        loadOffers();
+      }, 30000);
+    }
+
+    startAutoRefresh();
+
+    document.getElementById("dynamic-msg").textContent = "Dashboard auto-refreshes every 30 seconds.";
+  </script>
+</body>
+</html>

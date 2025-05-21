@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Wallet - Energy Sharing</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .container {
+      max-width: 800px;
+      margin: 50px auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      font-family: Arial, sans-serif;
+    }
+    h2 {
+      color: #0288d1;
+    }
+    .wallet-info {
+      margin: 20px 0;
+      font-size: 1.1rem;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #0288d1;
+      border: none;
+      color: white;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    button:hover {
+      background-color: #0277bd;
+    }
+    button.back {
+      background-color: #e53935;
+    }
+    button.back:hover {
+      background-color: #d32f2f;
+    }
+    #message {
+      margin-top: 20px;
+      font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Your Wallet</h2>
+    <div class="wallet-info">
+      <p><strong>Wallet Address:</strong> <span id="wallet-address">Not set</span></p>
+      <p><strong>Private Key:</strong> <span id="wallet-private">Not set</span></p>
+    </div>
+    <button onclick="createWallet()">Create/Update Wallet</button>
+    <button class="back" onclick="window.location.href='dashboard.html'">Back to Dashboard</button>
+    <div id="message"></div>
+  </div>
+
+  <script>
+    const userId = localStorage.getItem("user_id");
+
+    async function loadWallet() {
+      if (!userId) {
+        alert("User not logged in. Please log in again.");
+        window.location.href = "login.html";
+        return;
+      }
+      try {
+        const res = await fetch(`http://localhost:3000/api/wallet/${userId}`);
+        const data = await res.json();
+        if (res.ok) {
+          document.getElementById("wallet-address").textContent = data.wallet.wallet_address || "Not set";
+          document.getElementById("wallet-private").textContent = data.wallet.wallet_private_key || "Not set";
+        } else {
+          document.getElementById("message").textContent = data.error;
+        }
+      } catch (error) {
+        console.error("Error fetching wallet info:", error);
+        document.getElementById("message").textContent = "Error connecting to server.";
+      }
+    }
+
+    async function createWallet() {
+      if (!userId) {
+        alert("User not logged in. Please log in again.");
+        window.location.href = "login.html";
+        return;
+      }
+      try {
+        const res = await fetch("http://localhost:3000/api/wallet/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id: userId })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          document.getElementById("message").textContent = "Wallet created successfully.";
+          loadWallet();
+        } else {
+          document.getElementById("message").textContent = data.error;
+        }
+      } catch (error) {
+        console.error("Error creating wallet:", error);
+        document.getElementById("message").textContent = "Error connecting to server.";
+      }
+    }
+
+    loadWallet();
+  </script>
+</body>
+</html>

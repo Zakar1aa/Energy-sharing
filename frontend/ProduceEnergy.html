@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Produce Energy - Energy Sharing</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #0288d1;
+      padding: 15px;
+      color: white;
+      text-align: center;
+    }
+    header nav a {
+      color: white;
+      margin: 0 10px;
+      text-decoration: none;
+    }
+    .container {
+      max-width: 600px;
+      margin: 30px auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h2 {
+      color: #0288d1;
+    }
+    p.instructions {
+      margin-bottom: 20px;
+    }
+    form label {
+      font-weight: bold;
+    }
+    input[type="number"] {
+      padding: 10px;
+      width: 100%;
+      margin: 10px 0 20px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #0288d1;
+      border: none;
+      color: white;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0277bd;
+    }
+    button.back {
+      background-color: #e53935;
+      margin-top: 20px;
+    }
+    button.back:hover {
+      background-color: #d32f2f;
+    }
+    .message {
+      margin-top: 20px;
+      font-size: 1rem;
+    }
+    #loader {
+      display: none;
+      font-size: 1rem;
+      color: #0288d1;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Energy Sharing Platform</h1>
+    <nav>
+      <a href="dashboard.html">Dashboard</a>
+    </nav>
+  </header>
+  <div class="container">
+    <h2>Produce Energy</h2>
+    <p class="instructions">
+      Use this interface to produce new energy tokens representing your contribution to the decentralized network.
+      Enter the amount of energy (in tokens) you want to produce and submit your request.
+    </p>
+    <form id="produceForm">
+      <label for="amount">Energy Amount (Tokens):</label>
+      <input type="number" id="amount" min="1" placeholder="Enter amount" required>
+      <button type="submit">Produce Energy</button>
+    </form>
+    <div id="loader">Processing transaction, please wait...</div>
+    <div id="msg" class="message"></div>
+    <button class="back" onclick="window.location.href='dashboard.html'">Back to Dashboard</button>
+  </div>
+
+  <script>
+    document.getElementById("produceForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const amount = document.getElementById("amount").value;
+      document.getElementById("loader").style.display = "block";
+      document.getElementById("msg").textContent = "";
+      try {
+        const res = await fetch("/api/energy/produce", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ amount })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          document.getElementById("msg").innerHTML = `<span style="color:green;">Energy produced successfully!<br>Transaction: ${data.transaction}</span>`;
+          setTimeout(() => { window.location.href = "dashboard.html"; }, 3000);
+        } else {
+          document.getElementById("msg").innerHTML = `<span style="color:red;">Error: ${data.error}</span>`;
+        }
+      } catch (error) {
+        console.error("Error during energy production:", error);
+        document.getElementById("msg").innerHTML = `<span style="color:red;">Error connecting to server.</span>`;
+      }
+      document.getElementById("loader").style.display = "none";
+    });
+  </script>
+</body>
+</html>

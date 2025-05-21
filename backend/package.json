@@ -1,0 +1,38 @@
+{
+    "name": "energy-sharing-project-backend",
+    "version": "1.0.0",
+    "description": "Backend for Energy Sharing blockchain project using Express, ethers, and Web3 configuration",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js",
+        "dev": "nodemon server.js",
+        "deploy": "node scripts/deploy.js",
+        "interact": "node scripts/interact.js"
+    },
+    "keywords": [
+        "blockchain",
+        "energy",
+        "smart-contract",
+        "express",
+        "ethereum"
+    ],
+    "author": "Bahae",
+    "license": "MIT",
+    "dependencies": {
+        "@ethersproject/experimental": "^5.8.0",
+        "body-parser": "^1.20.3",
+        "cors": "^2.8.5",
+        "dotenv": "^16.4.7",
+        "express": "^4.21.2",
+        "fabric-ca-client": "^2.2.20",
+        "fabric-network": "^2.2.20",
+        "mysql": "^2.18.1",
+        "web3": "^4.16.0"
+    },
+    "devDependencies": {
+        "@nomiclabs/hardhat-ethers": "^2.2.3",
+        "ethers": "^5.8.0",
+        "hardhat": "^2.22.19",
+        "nodemon": "^3.1.9"
+    }
+}

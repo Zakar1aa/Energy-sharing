@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transaction History - Energy Sharing</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #0288d1;
+      padding: 15px;
+      color: white;
+      text-align: center;
+    }
+    header nav a {
+      color: white;
+      margin: 0 10px;
+      text-decoration: none;
+    }
+    .container {
+      max-width: 800px;
+      margin: 30px auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h2 {
+      color: #0288d1;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 12px;
+      border: 1px solid #ccc;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #0288d1;
+      border: none;
+      color: white;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    button:hover {
+      background-color: #0277bd;
+    }
+    #loader {
+      font-size: 1rem;
+      color: #0288d1;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Energy Sharing Platform</h1>
+    <nav>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="TransactionHistory.html">Transaction History</a>
+    </nav>
+  </header>
+  <div class="container">
+    <h2>Your Transaction History</h2>
+    <div id="loader">Loading transactions...</div>
+    <table id="transactionsTable" style="display:none;">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Type</th>
+          <th>Amount</th>
+          <th>Recipient</th>
+          <th>Transaction Hash</th>
+        </tr>
+      </thead>
+      <tbody id="transactionsBody"></tbody>
+    </table>
+    <button onclick="window.location.href='dashboard.html'">Back to Dashboard</button>
+  </div>
+  <script>
+    // Retrieve user_id from localStorage (stored during login)
+    const userId = localStorage.getItem("user_id");
+
+    async function fetchTransactions() {
+      if (!userId) {
+        alert("User not logged in. Please log in again.");
+        window.location.href = "login.html";
+        return;
+      }
+      try {
+        const res = await fetch(`http://localhost:3000/api/transactions/${userId}`);
+        const data = await res.json();
+        if (res.ok) {
+          const transactions = data.transactions;
+          const tbody = document.getElementById("transactionsBody");
+          transactions.forEach(tx => {
+            const tr = document.createElement("tr");
+            const date = new Date(tx.timestamp).toLocaleString();
+            const type = tx.transaction_type;
+            const amount = tx.amount;
+            const recipient = tx.recipient || "-";
+            const txHash = tx.transaction_hash || "-";
+            tr.innerHTML = `<td>${date}</td><td>${type}</td><td>${amount}</td><td>${recipient}</td><td>${txHash}</td>`;
+            tbody.appendChild(tr);
+          });
+          document.getElementById("loader").style.display = "none";
+          document.getElementById("transactionsTable").style.display = "table";
+        } else {
+          document.getElementById("loader").textContent = "Error loading transactions.";
+        }
+      } catch (error) {
+        console.error("Error fetching transactions:", error);
+        document.getElementById("loader").textContent = "Error connecting to server.";
+      }
+    }
+    fetchTransactions();
+  </script>
+</body>
+</html>
